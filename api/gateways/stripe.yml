@@ -1,0 +1,19 @@
+Stripe-Services:
+  info:
+    api_url: "https://api.gatewayx.com"
+  secrets:
+    api_key: "your-api-key"
+    secret_key: "your-secret-key"
+  retries:
+    timeout: 30
+    retries: 3
+
+Mercado-Pago:
+  info:
+    api_url: "https://api.gatewayx.com"
+  secrets:
+    api_key: "your-api-key"
+    secret_key: "your-secret-key"
+  retries:
+    timeout: 30
+    retries: 3
