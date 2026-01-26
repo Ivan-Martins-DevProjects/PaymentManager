@@ -3,10 +3,13 @@ package init
 import (
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	e "github.com/Ivan-Martins-DevProjects/PayHub/internal/appErrors"
+	"github.com/Ivan-Martins-DevProjects/PayHub/internal/models"
 	security "github.com/Ivan-Martins-DevProjects/PayHub/internal/security"
 	system "github.com/Ivan-Martins-DevProjects/PayHub/internal/system"
 )
@@ -19,7 +22,7 @@ var PayHubInit = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := funcInit(flagSecret)
 		if err != nil {
-			fmt.Printf("Erro com a aplicação: %v\n", err)
+			fmt.Println(err)
 			return
 		}
 
@@ -48,7 +51,7 @@ func funcInit(mainSecret string) error {
 				case "ENV_NOT_FOUND":
 					fmt.Print("Arquivo .env não encontrado, digite a SECRET_KEY para criptografar as chaves de API:\n")
 					fmt.Scanln(&createPassKey)
-					err = createPassKeyEnv(createPassKey)
+					err = CreateUpdatePassKeyEnv(createPassKey)
 					if err != nil {
 						return err
 					}
@@ -56,7 +59,7 @@ func funcInit(mainSecret string) error {
 				case "SECRET_KEY_NOT_FOUND":
 					fmt.Print("SECRET_KEY não encontrada, digite a SECRET_KEY para criptografar as chaves de API:\n")
 					fmt.Scanln(&createPassKey)
-					err = updateSecretEnv(createPassKey)
+					err = CreateUpdatePassKeyEnv(createPassKey)
 					if err != nil {
 						return err
 					}
@@ -75,32 +78,77 @@ func funcInit(mainSecret string) error {
 			return fmt.Errorf("Erro ao validar arquivo .env: %s", err)
 		}
 		if found {
-			var confirm string
-			fmt.Print("Foi encontrado uma Secret Key no arquivo .env, deseja sobrescrever[S/N]")
-			fmt.Scanln(&confirm)
+			for {
+				var confirm string
+				fmt.Print("Foi encontrado uma Secret Key no arquivo .env, deseja sobrescrever[S/N]")
+				fmt.Scanln(&confirm)
 
-			if confirm == "N" || confirm == "n" {
-				secret, err = getSecretFromEnv()
-				if err != nil {
-					return err
-				}
-				return nil
-			} else {
-				err = updateSecretEnv(secret)
-				if err != nil {
-					return err
+				switch strings.ToLower(confirm) {
+				case "n":
+					secret, err = getSecretFromEnv()
+					if err != nil {
+						return err
+					}
+					err = CreateConfigFile(filesConfig, secret)
+					if err != nil {
+						return err
+					}
+					return nil
+
+				case "s":
+					err := setPassKeyAndCreateKeysConfig(filesConfig, secret)
+					if err != nil {
+						return err
+					}
+					return nil
+
+				default:
+					fmt.Print("Opção incorreta, por favor digite 's' para 'Sim' e 'n' para 'Não'")
 				}
 			}
 		} else {
-			createPassKeyEnv(secret)
+			setPassKeyAndCreateKeysConfig(filesConfig, secret)
+			return nil
 		}
 	}
 
+	err = CreateConfigFile(filesConfig, secret)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func setPassKeyAndCreateKeysConfig(filesConfig []*models.Config, secret string) error {
+	err := CreateUpdatePassKeyEnv(secret)
+	if err != nil {
+		return err
+	}
+	err = CreateConfigFile(filesConfig, secret)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreateConfigFile(filesConfig []*models.Config, secret string) error {
+	filePath := ".keys"
+
+	err := os.Remove(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Println("Criando arquivo de configuração!")
+		} else {
+			return e.GenerateError(*system.DeleteKeysError, err)
+		}
+	}
+
+	fmt.Println("Estruturando arquivo de configuração")
 	for _, config := range filesConfig {
 		for name, gateway := range config.Gateways {
 			key := gateway.Secrets.Api_Key
 
-			found, err := NameAlreadyExists(".keys", name)
+			found, err := NameAlreadyExists(filePath, name)
 			if err != nil {
 				return err
 			}

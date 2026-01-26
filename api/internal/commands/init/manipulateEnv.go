@@ -48,25 +48,20 @@ func NameAlreadyExists(Filename, GatewayID string) (bool, error) {
 	return false, nil
 }
 
-func createPassKeyEnv(secretKey string) error {
-	filename := ".env"
-
-	var file *os.File
-
-	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+func CreateUpdatePassKeyEnv(secretKey string) error {
+	fmt.Println("Ajustando .env com as novas informações")
+	envMap, err := godotenv.Read(".env")
 	if err != nil {
 		if os.IsNotExist(err) {
-			file, err = os.Create(filename)
-			if err != nil {
-				return e.GenerateError(*s.CreateEnvError, err)
-			}
+			envMap = make(map[string]string)
+		} else {
+			return e.GenerateError(*s.OpenEnvError, err)
 		}
-		return e.GenerateError(*s.OpenEnvError, err)
 	}
-	defer file.Close()
 
-	line := fmt.Sprintf("%s=%s\n", "SECRET_KEY", secretKey)
-	_, err = file.WriteString(line)
+	envMap["SECRET_KEY"] = secretKey
+
+	err = godotenv.Write(envMap, ".env")
 	if err != nil {
 		return e.GenerateError(*s.UpdateEnvError, err)
 	}
@@ -90,20 +85,4 @@ func getSecretFromEnv() (string, error) {
 	}
 
 	return envSecret, nil
-}
-
-func updateSecretEnv(secretKey string) error {
-	envMap, err := godotenv.Read()
-	if err != nil {
-		return e.GenerateError(*s.UpdateEnvError, err)
-	}
-
-	envMap["SECRET_KEY"] = secretKey
-
-	err = godotenv.Write(envMap, ".env")
-	if err != nil {
-		return e.GenerateError(*s.UpdateEnvError, err)
-	}
-
-	return nil
 }

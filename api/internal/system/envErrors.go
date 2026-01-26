@@ -26,11 +26,16 @@ var CreateEnvError = &e.InternalError{
 }
 
 var CreateKeysError = &e.InternalError{
-	InternalCode:    "CREATE_ENV_ERROR",
+	InternalCode:    "CREATE_KEYS_ERROR",
 	InternalMessage: "Erro ao criar arquivo .keys",
 }
 
 var EnvNotFound = &e.InternalError{
 	InternalCode:    "ENV_NOT_FOUND",
 	InternalMessage: "Arquivo .env não encontrado",
+}
+
+var DeleteKeysError = &e.InternalError{
+	InternalCode:    "DELETE_KEYS_ERROR",
+	InternalMessage: "Erro ao criar arquivo .keys",
 }
