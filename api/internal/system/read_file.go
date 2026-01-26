@@ -9,7 +9,6 @@ import (
 	models "github.com/Ivan-Martins-DevProjects/PayHub/internal/models"
 	"gopkg.in/yaml.v3"
 )
-
 func CreateGatewayConfig() ([]*models.Config, error) {
 	dir := "./gateways"
 

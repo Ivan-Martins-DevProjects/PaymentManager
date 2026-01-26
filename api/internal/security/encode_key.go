@@ -8,6 +8,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"io"
+
+	e "github.com/Ivan-Martins-DevProjects/PayHub/internal/appErrors"
 )
 
 func deriveKey(secret string) []byte {
@@ -20,17 +22,17 @@ func EncryptKey(plainText string, secretKey string) (string, error) {
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return "", err
+		return "", e.GenerateError(*EncryptError, err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", err
+		return "", e.GenerateError(*EncryptError, err)
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		return "", err
+		return "", e.GenerateError(*EncryptError, err)
 	}
 
 	cipherText := gcm.Seal(nonce, nonce, []byte(plainText), nil)
@@ -42,28 +44,28 @@ func DecryptKey(cipherTextBase64 string, secretKey string) (string, error) {
 
 	cipherText, err := base64.StdEncoding.DecodeString(cipherTextBase64)
 	if err != nil {
-		return "", err
+		return "", e.GenerateError(*DecryptError, err)
 	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return "", err
+		return "", e.GenerateError(*DecryptError, err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", err
+		return "", e.GenerateError(*DecryptError, err)
 	}
 
 	nonceSize := gcm.NonceSize()
 	if len(cipherText) < nonceSize {
-		return "", errors.New("texto cifrado muito curto")
+		return "", e.GenerateError(*DecryptError, errors.New("texto cifrado muito curto"))
 	}
 
 	nonce, cipherTextClean := cipherText[:nonceSize], cipherText[nonceSize:]
 	plainText, err := gcm.Open(nil, nonce, cipherTextClean, nil)
 	if err != nil {
-		return "", err
+		return "", e.GenerateError(*DecryptError, err)
 	}
 
 	return string(plainText), nil

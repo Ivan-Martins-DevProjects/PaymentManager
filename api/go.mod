@@ -1,6 +1,6 @@
 module github.com/Ivan-Martins-DevProjects/PayHub
 
-go 1.25.4
+go 1.25
 
 require (
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
@@ -8,6 +8,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.30.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect

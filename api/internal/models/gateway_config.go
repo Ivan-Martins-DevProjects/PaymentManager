@@ -18,7 +18,6 @@ type InfoConfig struct {
 
 type SecretsConfig struct {
 	Api_Key    string `yaml:"api_key" validate:"required"`
-	Secret_key string `yaml:"secret_key" validate:"required"`
 }
 
 type RetriesConfig struct {
