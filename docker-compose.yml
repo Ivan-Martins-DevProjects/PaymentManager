@@ -2,9 +2,6 @@ services:
   api:
     container_name: api
     build: ./api
-    # environment:
-    # - JWT_KEY=${JWT_KEY}
-    # - POSTGRES_URL=${POSTGRES_URL}
     ports:
       - 7272:7272
     networks:
@@ -19,5 +16,38 @@ services:
         - action: rebuild
           path: go.sum
 
+  postgres:
+    container_name: db-payhub
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: payhub
+    ports:
+      - 5887:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - payyhub
+
+  redis:
+    container_name: cache-payhub
+    image: redis:7-alpine
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis:/data
+    command: redis-server --apendonly yes
+    networks:
+      - payhub
+
+volumes:
+  postgres:
+    redis:
+
 networks:
-  paymentManager:
+  payhub:

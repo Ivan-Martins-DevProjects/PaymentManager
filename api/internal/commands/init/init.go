@@ -89,6 +89,7 @@ func funcInit(mainSecret string) error {
 					if err != nil {
 						return err
 					}
+					// enviar para o banco de dados
 					err = CreateConfigFile(filesConfig, secret)
 					if err != nil {
 						return err
@@ -103,7 +104,7 @@ func funcInit(mainSecret string) error {
 					return nil
 
 				default:
-					fmt.Print("Opção incorreta, por favor digite 's' para 'Sim' e 'n' para 'Não'")
+					fmt.Print("Opção incorreta, por favor digite 's' para 'Sim' e 'n' para 'Não'\n")
 				}
 			}
 		} else {

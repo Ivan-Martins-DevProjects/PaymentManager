@@ -19,7 +19,7 @@ func (e *InternalError) Error() string {
 	return e.InternalCode
 }
 
-func (e *InternalError) Unrwap() error {
+func (e *InternalError) Unwrap() error {
 	return e.TracebackError
 }
 

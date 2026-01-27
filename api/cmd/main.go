@@ -5,6 +5,7 @@ import (
 	"os"
 
 	payhubInit "github.com/Ivan-Martins-DevProjects/PayHub/internal/commands/init"
+	payhubToken "github.com/Ivan-Martins-DevProjects/PayHub/internal/commands/token"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +17,7 @@ func main() {
 	}
 
 	PayHubRoot.AddCommand(payhubInit.PayHubInit)
+	PayHubRoot.AddCommand(payhubToken.PayHubToken)
 
 	if err := PayHubRoot.Execute(); err != nil {
 		fmt.Println(err)
