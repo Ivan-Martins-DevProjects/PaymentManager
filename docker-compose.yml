@@ -1,20 +1,20 @@
 services:
-  api:
-    container_name: api
-    build: ./api
-    ports:
-      - 7272:7272
-    networks:
-      - paymentManager
-    develop:
-      watch:
-        - action: sync
-          path: ./backend/golang
-          target: /app
-          ignore:
-            - .env
-        - action: rebuild
-          path: go.sum
+  # api:
+  #   container_name: api
+  #   build: ./api
+  #   ports:
+  #     - 7272:7272
+  #   networks:
+  #     - payhub
+  #   develop:
+  #     watch:
+  #       - action: sync
+  #         path: ./backend/golang
+  #         target: /app
+  #         ignore:
+  #           - .env
+  #       - action: rebuild
+  #         path: go.sum
 
   postgres:
     container_name: db-payhub
@@ -28,7 +28,7 @@ services:
     volumes:
       - postgres:/var/lib/postgresql/data
     networks:
-      - payyhub
+      - payhub
 
   redis:
     container_name: cache-payhub
@@ -41,13 +41,12 @@ services:
       - 6379:6379
     volumes:
       - redis:/data
-    command: redis-server --apendonly yes
     networks:
       - payhub
 
 volumes:
   postgres:
-    redis:
+  redis:
 
 networks:
   payhub:

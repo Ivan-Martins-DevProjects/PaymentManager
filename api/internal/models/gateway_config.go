@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/Ivan-Martins-DevProjects/PayHub/internal/repository"
+	"github.com/Ivan-Martins-DevProjects/PayHub/internal/cache"
 )
 
 type Config struct {
@@ -29,10 +29,10 @@ type RetriesConfig struct {
 	Retries int16 `yaml:"retries"`
 }
 
-func (g *Config) GetInputDB() (*repository.InputDBGateway, error) {
-	var response *repository.InputDBGateway
+func (g *Config) GetInputDB() (*cache.InputDBGateway, error) {
+	var response *cache.InputDBGateway
 	for name, gateways := range g.Gateways {
-		response = &repository.InputDBGateway{
+		response = &cache.InputDBGateway{
 			ID:        name,
 			Api_URL:   gateways.Info.Api_URL,
 			Api_Key:   gateways.Secrets.Api_Key,
