@@ -1,10 +1,12 @@
 package system
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
 	e "github.com/Ivan-Martins-DevProjects/PayHub/internal/appErrors"
+	"github.com/joho/godotenv"
 )
 
 func CreateDotKeys(GatewayID string, EncriptedKey string) error {
@@ -31,4 +33,22 @@ func CreateDotKeys(GatewayID string, EncriptedKey string) error {
 	}
 
 	return nil
+}
+
+func GetSecretFromEnv() (string, error) {
+	var envSecret string
+	err := godotenv.Load()
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "", e.GenerateError(*EnvNotFound, err)
+		}
+		return "", e.GenerateError(*InternalEnvError, err)
+	}
+
+	envSecret = os.Getenv("SECRET_KEY")
+	if envSecret == "" {
+		return "", e.GenerateError(*SecretMissing, err)
+	}
+
+	return envSecret, nil
 }

@@ -4,6 +4,11 @@ import (
 	e "github.com/Ivan-Martins-DevProjects/PayHub/internal/appErrors"
 )
 
+var SecretMissing = &e.InternalError{
+	InternalCode:    "SECRET_KEY_NOT_FOUND",
+	InternalMessage: "SECRET_KEY não encontrada",
+}
+
 // Env Errors
 var InternalEnvError = &e.InternalError{
 	InternalCode:    "INTERNAL_ENV_ERROR",

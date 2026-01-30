@@ -51,7 +51,6 @@ func GenerateToken(expire string) ([]*tokenjwt.ResponseTokens, error) {
 					ApiURL:  item.Info.Api_URL,
 					Timeout: int(item.Retries.Timeout),
 					Retries: int(item.Retries.Retries),
-					// Expires: expire,
 				},
 			)
 		}

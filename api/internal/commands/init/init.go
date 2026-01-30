@@ -10,6 +10,7 @@ import (
 
 	e "github.com/Ivan-Martins-DevProjects/PayHub/internal/appErrors"
 	"github.com/Ivan-Martins-DevProjects/PayHub/internal/models"
+	"github.com/Ivan-Martins-DevProjects/PayHub/internal/repository"
 	security "github.com/Ivan-Martins-DevProjects/PayHub/internal/security"
 	system "github.com/Ivan-Martins-DevProjects/PayHub/internal/system"
 )
@@ -89,15 +90,16 @@ func funcInit(mainSecret string) error {
 					if err != nil {
 						return err
 					}
-					// enviar para o banco de dados
-					err = CreateConfigFile(filesConfig, secret)
+					err = insertGatewayInfo(filesConfig, secret)
 					if err != nil {
 						return err
 					}
 					return nil
 
 				case "s":
-					err := setPassKeyAndCreateKeysConfig(filesConfig, secret)
+					fmt.Println(secret)
+					fmt.Println(filesConfig)
+					err := insertGatewayInfo(filesConfig, secret)
 					if err != nil {
 						return err
 					}
@@ -108,24 +110,38 @@ func funcInit(mainSecret string) error {
 				}
 			}
 		} else {
-			setPassKeyAndCreateKeysConfig(filesConfig, secret)
+			err = insertGatewayInfo(filesConfig, secret)
+			if err != nil {
+				return err
+			}
+
 			return nil
 		}
 	}
 
-	err = CreateConfigFile(filesConfig, secret)
+	err = repository.InitRepo(filesConfig, secret)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func setPassKeyAndCreateKeysConfig(filesConfig []*models.Config, secret string) error {
-	err := CreateUpdatePassKeyEnv(secret)
+func insertGatewayInfo(filesConfig []*models.Config, secret string) error {
+	err := SetPassKey(secret)
 	if err != nil {
 		return err
 	}
-	err = CreateConfigFile(filesConfig, secret)
+
+	err = repository.InitRepo(filesConfig, secret)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SetPassKey(secret string) error {
+	err := CreateUpdatePassKeyEnv(secret)
 	if err != nil {
 		return err
 	}

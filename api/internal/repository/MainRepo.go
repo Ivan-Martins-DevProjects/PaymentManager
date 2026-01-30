@@ -3,37 +3,35 @@ package repository
 import (
 	"context"
 	"fmt"
-	"strings"
 
-	"github.com/Ivan-Martins-DevProjects/PayHub/internal/cache"
+	"github.com/Ivan-Martins-DevProjects/PayHub/internal/models"
 )
 
-func InsertGatewayInfo(db *PostgresDb, input []*cache.InputDBGateway) error {
-	pool, err := db.GetPool(context.Background())
+func InitRepo(config []*models.Config, secret string) error {
+	GatewaysConfig, err := GetInputDB(config, secret)
 	if err != nil {
 		return err
 	}
 
-	var sb strings.Builder
-	sb.WriteString("INSERT INTO gateways (name, api_url, api_key, timeout, retries, createdAt, expireAt) VALUES ")
+	ctx := context.Background()
 
-	args := make([]any, 0, len(input)*7)
-	for index, gateways := range input {
-		p := index * 7
-		fmt.Fprintf(&sb, "($%d, $%d, $%d, $%d, $%d, $%d, $%d)",
-			p+1, p+2, p+3, p+4, p+5, p+6, p+7)
-
-		if index < len(input)-1 {
-			sb.WriteString(", ")
-		}
-		args = append(
-			args,
-			gateways.ID, gateways.Api_URL, gateways.Api_Key, gateways.Timeout,
-			gateways.Retries, gateways.CreatedAt, gateways.ExpireAt,
-		)
+	dbInstance := PostgresDb{}
+	repo := MainRepo{
+		db: &dbInstance,
 	}
 
-	_, err = pool.Exec(context.Background(), sb.String(), args...)
+	for _, item := range GatewaysConfig {
+		exists, err := repo.CheckIfGatewayExists(ctx, item.ID)
+		if err != nil {
+			return err
+		}
+
+		if exists == true {
+			return fmt.Errorf("Gateway já cadastrado: %v", item.ID)
+		}
+	}
+
+	err = repo.InsertGatewayInfo(ctx, GatewaysConfig)
 	if err != nil {
 		return err
 	}
