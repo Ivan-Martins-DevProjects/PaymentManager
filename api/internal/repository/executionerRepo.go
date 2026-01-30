@@ -6,14 +6,14 @@ import (
 	"strings"
 )
 
-func (r *MainRepo) InsertGatewayInfo(ctx context.Context, input []*InputDBGateway) error {
-	pool, err := r.db.GetPool(context.Background())
+func (r *MainRepo) InsertGatewayInfoDB(ctx context.Context, input []*InputDBGateway) error {
+	pool, err := r.DB.GetPool(context.Background())
 	if err != nil {
 		return err
 	}
 
 	var sb strings.Builder
-	sb.WriteString("INSERT INTO gateways (name, api_url, api_key, timeout, retries, createdAt, expireAt) VALUES ")
+	sb.WriteString("INSERT INTO gateways (name, api_url, api_key, timeout, retries, createdAt, expiresAt) VALUES ")
 
 	args := make([]any, 0, len(input)*7)
 	for index, gateways := range input {
@@ -40,7 +40,7 @@ func (r *MainRepo) InsertGatewayInfo(ctx context.Context, input []*InputDBGatewa
 }
 
 func (r *MainRepo) CheckIfGatewayExists(ctx context.Context, name string) (bool, error) {
-	pool, err := r.db.GetPool(ctx)
+	pool, err := r.DB.GetPool(ctx)
 	if err != nil {
 		return false, err
 	}

@@ -1,17 +1,17 @@
 package init
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	e "github.com/Ivan-Martins-DevProjects/PayHub/internal/appErrors"
+	"github.com/Ivan-Martins-DevProjects/PayHub/internal/cache"
 	"github.com/Ivan-Martins-DevProjects/PayHub/internal/models"
 	"github.com/Ivan-Martins-DevProjects/PayHub/internal/repository"
-	security "github.com/Ivan-Martins-DevProjects/PayHub/internal/security"
 	system "github.com/Ivan-Martins-DevProjects/PayHub/internal/system"
 )
 
@@ -35,7 +35,53 @@ func init() {
 	PayHubInit.Flags().StringVarP(&flagSecret, "secret", "s", "", "Senha de criptografia das chaves de API")
 }
 
+type InsertConfig struct {
+	redis    *cache.MainCache
+	postgres *repository.MainRepo
+	ctx      context.Context
+}
+
+func (i *InsertConfig) SaveGatewayInfo(filesConfig []*models.Config, secret string) error {
+	err := CreateUpdatePassKeyEnv(secret)
+	if err != nil {
+		return err
+	}
+
+	redisInput, err := i.postgres.InsertGatewayInfo(i.ctx, filesConfig, secret)
+	if err != nil {
+		return err
+	}
+
+	err = i.redis.InsertGatewayCacheInfo(i.ctx, redisInput)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func funcInit(mainSecret string) error {
+	MainCache, err := cache.CreateRedisClient()
+	if err != nil {
+		return err
+	}
+	ctx := context.Background()
+
+	p := &repository.PostgresDb{}
+	_, err = p.GetPool(ctx)
+	if err != nil {
+		return err
+	}
+
+	repo := &repository.MainRepo{
+		DB: p,
+	}
+	i := &InsertConfig{
+		redis:    MainCache,
+		postgres: repo,
+		ctx:      ctx,
+	}
+
 	filesConfig, err := system.CreateGatewayConfig()
 	if err != nil {
 		return err
@@ -90,16 +136,14 @@ func funcInit(mainSecret string) error {
 					if err != nil {
 						return err
 					}
-					err = insertGatewayInfo(filesConfig, secret)
+					err = i.SaveGatewayInfo(filesConfig, secret)
 					if err != nil {
 						return err
 					}
 					return nil
 
 				case "s":
-					fmt.Println(secret)
-					fmt.Println(filesConfig)
-					err := insertGatewayInfo(filesConfig, secret)
+					err := i.SaveGatewayInfo(filesConfig, secret)
 					if err != nil {
 						return err
 					}
@@ -110,7 +154,7 @@ func funcInit(mainSecret string) error {
 				}
 			}
 		} else {
-			err = insertGatewayInfo(filesConfig, secret)
+			err = i.SaveGatewayInfo(filesConfig, secret)
 			if err != nil {
 				return err
 			}
@@ -119,70 +163,9 @@ func funcInit(mainSecret string) error {
 		}
 	}
 
-	err = repository.InitRepo(filesConfig, secret)
+	err = i.SaveGatewayInfo(filesConfig, secret)
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func insertGatewayInfo(filesConfig []*models.Config, secret string) error {
-	err := SetPassKey(secret)
-	if err != nil {
-		return err
-	}
-
-	err = repository.InitRepo(filesConfig, secret)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func SetPassKey(secret string) error {
-	err := CreateUpdatePassKeyEnv(secret)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func CreateConfigFile(filesConfig []*models.Config, secret string) error {
-	filePath := ".keys"
-
-	err := os.Remove(filePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			fmt.Println("Criando arquivo de configuração!")
-		} else {
-			return e.GenerateError(*system.DeleteKeysError, err)
-		}
-	}
-
-	fmt.Println("Estruturando arquivo de configuração")
-	for _, config := range filesConfig {
-		for name, gateway := range config.Gateways {
-			key := gateway.Secrets.Api_Key
-
-			found, err := NameAlreadyExists(filePath, name)
-			if err != nil {
-				return err
-			}
-			if found {
-				return e.GenerateError(*GatewayNameAlreadyExists, err)
-			}
-
-			hashedKey, err := security.EncryptKey(key, secret)
-			if err != nil {
-				return err
-			}
-
-			err = system.CreateDotKeys(name, hashedKey)
-			if err != nil {
-				return fmt.Errorf("Erro ao registrar key criptografada: %s", err)
-			}
-		}
 	}
 	return nil
 }

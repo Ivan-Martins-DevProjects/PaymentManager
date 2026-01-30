@@ -2,39 +2,32 @@ package repository
 
 import (
 	"context"
-	"fmt"
 
+	e "github.com/Ivan-Martins-DevProjects/PayHub/internal/appErrors"
 	"github.com/Ivan-Martins-DevProjects/PayHub/internal/models"
 )
 
-func InitRepo(config []*models.Config, secret string) error {
+func (db *MainRepo) InsertGatewayInfo(ctx context.Context, config []*models.Config, secret string) ([]*InputDBGateway, error) {
 	GatewaysConfig, err := GetInputDB(config, secret)
 	if err != nil {
-		return err
-	}
-
-	ctx := context.Background()
-
-	dbInstance := PostgresDb{}
-	repo := MainRepo{
-		db: &dbInstance,
+		return nil, err
 	}
 
 	for _, item := range GatewaysConfig {
-		exists, err := repo.CheckIfGatewayExists(ctx, item.ID)
+		exists, err := db.CheckIfGatewayExists(ctx, item.ID)
 		if err != nil {
-			return err
+			return nil, e.GenerateError(*InternalDBError, err)
 		}
 
 		if exists == true {
-			return fmt.Errorf("Gateway já cadastrado: %v", item.ID)
+			return nil, e.GenerateError(*GatewayAlreadyExists, err)
 		}
 	}
 
-	err = repo.InsertGatewayInfo(ctx, GatewaysConfig)
+	err = db.InsertGatewayInfoDB(ctx, GatewaysConfig)
 	if err != nil {
-		return err
+		return nil, e.GenerateError(*InternalDBError, err)
 	}
 
-	return nil
+	return GatewaysConfig, nil
 }

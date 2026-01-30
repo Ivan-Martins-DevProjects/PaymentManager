@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	e "github.com/Ivan-Martins-DevProjects/PayHub/internal/appErrors"
 	"github.com/Ivan-Martins-DevProjects/PayHub/internal/models"
 	"github.com/Ivan-Martins-DevProjects/PayHub/internal/security"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -16,7 +17,7 @@ type PostgresDb struct {
 }
 
 type MainRepo struct {
-	db *PostgresDb
+	DB *PostgresDb
 }
 
 type InputDBGateway struct {
@@ -33,7 +34,7 @@ func GetInputDB(models []*models.Config, secret string) ([]*InputDBGateway, erro
 	var response []*InputDBGateway
 	configs, err := SetSecretAndDecodeAPIKey(models, secret)
 	if err != nil {
-		return nil, err
+		return nil, e.GenerateError(*InternalDBError, err)
 	}
 
 	for _, config := range configs {
